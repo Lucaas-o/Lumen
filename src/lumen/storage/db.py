@@ -1,8 +1,9 @@
+# src\lumen\storage\db.py
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
 
 from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel, create_engine

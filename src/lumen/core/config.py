@@ -1,13 +1,14 @@
+# src\lumen\core\config.py
 from pathlib import Path
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class LumenConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="LUMEN_",
         toml_file="~/.lumen/config.toml",
-        toml_file_encoding="utf-8",
     )
 
     data_dir: Path = Field(default=Path("~/.lumen").expanduser())

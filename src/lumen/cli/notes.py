@@ -1,6 +1,8 @@
+# src\lumen\cli\notes.py
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -9,7 +11,7 @@ notes_app = typer.Typer(help="Gestiona tus notas.")
 console = Console()
 
 
-def _get_ctx(ctx: typer.Context):
+def _get_ctx(ctx: typer.Context) -> Any:
     return ctx.find_root().obj
 
 
@@ -43,10 +45,12 @@ def note_ls(
     app_ctx = _get_ctx(ctx)
     repo = NoteRepository()
     with get_session(app_ctx.engine) as session:
-        notes = repo.list(session, limit=limit)
+        notes = repo.list_recent(session, limit=limit)
 
     if not notes:
-        console.print("[dim]Sin notas todavía. Prueba: lumen note add \"mi primera nota\"[/dim]")
+        console.print(
+            '[dim]Sin notas todavía. Prueba: lumen note add "mi primera nota"[/dim]'
+        )
         return
 
     table = Table(show_header=True, header_style="bold")
@@ -71,9 +75,10 @@ def note_show(
     note_id: int = typer.Argument(..., help="ID de la nota"),
 ) -> None:
     """Muestra el contenido completo de una nota."""
+    from rich.panel import Panel
+
     from lumen.storage.db import get_session
     from lumen.storage.repositories import NoteRepository
-    from rich.panel import Panel
 
     app_ctx = _get_ctx(ctx)
     repo = NoteRepository()

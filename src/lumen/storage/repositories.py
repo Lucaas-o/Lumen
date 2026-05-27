@@ -1,12 +1,22 @@
+# src\lumen\storage\repositories.py
 from __future__ import annotations
-from datetime import datetime
-from sqlmodel import Session, select
+
+from datetime import date, datetime
+
+from sqlmodel import Session, col, select
+
 from lumen.domain.note import Note
-from lumen.domain.task import Task, Priority
+from lumen.domain.task import Priority, Task
 
 
 class NoteRepository:
-    def create(self, session: Session, title: str, body: str = "", tags: list[str] | None = None) -> Note:
+    def create(
+        self,
+        session: Session,
+        title: str,
+        body: str = "",
+        tags: list[str] | None = None,
+    ) -> Note:
         note = Note(title=title, body=body)
         note.set_tags(tags or [])
         session.add(note)
@@ -17,12 +27,20 @@ class NoteRepository:
     def get(self, session: Session, note_id: int) -> Note | None:
         return session.get(Note, note_id)
 
-    def list(self, session: Session, limit: int = 20, offset: int = 0) -> list[Note]:
-        return list(session.exec(select(Note).order_by(Note.created_at.desc()).offset(offset).limit(limit)))
+    def list_recent(
+        self, session: Session, limit: int = 20, offset: int = 0
+    ) -> list[Note]:
+        stmt = (
+            select(Note)
+            .order_by(col(Note.created_at).desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return list(session.exec(stmt))
 
     def search(self, session: Session, query: str) -> list[Note]:
         q = f"%{query}%"
-        stmt = select(Note).where(Note.title.like(q) | Note.body.like(q))
+        stmt = select(Note).where(col(Note.title).like(q) | col(Note.body).like(q))
         return list(session.exec(stmt))
 
     def delete(self, session: Session, note_id: int) -> bool:
@@ -47,7 +65,13 @@ class NoteRepository:
 
 
 class TaskRepository:
-    def create(self, session: Session, title: str, due_date: object = None, priority: Priority = Priority.NORMAL) -> Task:
+    def create(
+        self,
+        session: Session,
+        title: str,
+        due_date: date | None = None,
+        priority: Priority = Priority.NORMAL,
+    ) -> Task:
         task = Task(title=title, due_date=due_date, priority=int(priority))
         session.add(task)
         session.commit()
@@ -57,8 +81,15 @@ class TaskRepository:
     def get(self, session: Session, task_id: int) -> Task | None:
         return session.get(Task, task_id)
 
-    def list(self, session: Session, done: bool = False, limit: int = 50) -> list[Task]:
-        stmt = select(Task).where(Task.done == done).order_by(Task.priority.desc()).limit(limit)
+    def list_by_status(
+        self, session: Session, done: bool = False, limit: int = 50
+    ) -> list[Task]:
+        stmt = (
+            select(Task)
+            .where(Task.done == done)
+            .order_by(col(Task.priority).desc())
+            .limit(limit)
+        )
         return list(session.exec(stmt))
 
     def mark_done(self, session: Session, task_id: int) -> Task | None:

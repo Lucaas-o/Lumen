@@ -1,3 +1,4 @@
+# src\lumen\cli\main.py
 from __future__ import annotations
 
 import typer
@@ -44,9 +45,7 @@ def search_cmd(
 ) -> None:
     """Busca en todas las fuentes (notas, tareas, etc.)."""
     app_ctx = ctx.obj
-    results = app_ctx.plugin_manager.hook.get_search_results(
-        query=query, ctx=app_ctx
-    )
+    results = app_ctx.plugin_manager.hook.get_search_results(query=query, ctx=app_ctx)
     flat = [r for sublist in results for r in sublist]
     if not flat:
         rprint("[dim]Sin resultados.[/dim]")

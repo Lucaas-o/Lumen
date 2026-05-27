@@ -1,7 +1,11 @@
+# src\lumen\domain\note.py
 from __future__ import annotations
+
 import json
 from datetime import datetime
-from sqlmodel import SQLModel, Field
+from typing import cast
+
+from sqlmodel import Field, SQLModel
 
 
 class Note(SQLModel, table=True):
@@ -14,7 +18,7 @@ class Note(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     def get_tags(self) -> list[str]:
-        return json.loads(self.tags)
+        return cast(list[str], json.loads(self.tags))
 
     def set_tags(self, tags: list[str]) -> None:
         self.tags = json.dumps(tags)

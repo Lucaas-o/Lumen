@@ -1,8 +1,11 @@
+# src\lumen\core\plugin_manager.py
 from __future__ import annotations
+
 import importlib.metadata
+
 import pluggy
+
 from lumen.core.hookspecs import LumenSpec
-from lumen.core.context import AppContext
 
 
 class PluginManager:
@@ -12,11 +15,15 @@ class PluginManager:
 
     def load_builtin_plugins(self) -> None:
         from lumen.builtin_plugins import notes, tasks
+
         self._pm.register(notes.NotesPlugin(), name="notes")
         self._pm.register(tasks.TasksPlugin(), name="tasks")
 
     def load_external_plugins(self) -> None:
         for ep in importlib.metadata.entry_points(group="lumen.plugins"):
+            # Skip built-ins (already loaded directly above).
+            if ep.name in ("notes", "tasks"):
+                continue
             module = ep.load()
             plugin_cls = getattr(module, "Plugin", None)
             if plugin_cls:
@@ -31,4 +38,4 @@ class PluginManager:
         return self._pm.hook
 
     def list_plugins(self) -> list[str]:
-        return list(self._pm.get_plugins())
+        return [str(p) for p in self._pm.get_plugins()]

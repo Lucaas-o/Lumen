@@ -1,8 +1,12 @@
+# src\lumen\domain\task.py
 from __future__ import annotations
+
 import json
-from datetime import datetime, date
+from datetime import date, datetime
 from enum import IntEnum
-from sqlmodel import SQLModel, Field
+from typing import cast
+
+from sqlmodel import Field, SQLModel
 
 
 class Priority(IntEnum):
@@ -22,4 +26,4 @@ class Task(SQLModel, table=True):
     done_at: datetime | None = Field(default=None)
 
     def get_tags(self) -> list[str]:
-        return json.loads(self.tags)
+        return cast(list[str], json.loads(self.tags))

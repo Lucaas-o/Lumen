@@ -1,4 +1,7 @@
+# src\lumen\cli\tasks.py
 from __future__ import annotations
+
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -8,7 +11,7 @@ tasks_app = typer.Typer(help="Gestiona tus tareas.")
 console = Console()
 
 
-def _get_ctx(ctx: typer.Context):
+def _get_ctx(ctx: typer.Context) -> Any:
     return ctx.find_root().obj
 
 
@@ -17,15 +20,22 @@ def task_add(
     ctx: typer.Context,
     title: str = typer.Argument(..., help="Título de la tarea"),
     due: str = typer.Option(None, "--due", "-d", help="Fecha límite (YYYY-MM-DD)"),
-    priority: str = typer.Option("normal", "--priority", "-p", help="normal | high | urgent"),
+    priority: str = typer.Option(
+        "normal", "--priority", "-p", help="normal | high | urgent"
+    ),
 ) -> None:
     """Crea una nueva tarea."""
-    from lumen.storage.db import get_session
-    from lumen.storage.repositories import TaskRepository
-    from lumen.domain.task import Priority
     from datetime import date
 
-    pmap = {"normal": Priority.NORMAL, "high": Priority.HIGH, "urgent": Priority.URGENT}
+    from lumen.domain.task import Priority
+    from lumen.storage.db import get_session
+    from lumen.storage.repositories import TaskRepository
+
+    pmap = {
+        "normal": Priority.NORMAL,
+        "high": Priority.HIGH,
+        "urgent": Priority.URGENT,
+    }
     prio = pmap.get(priority, Priority.NORMAL)
     due_date = date.fromisoformat(due) if due else None
 
@@ -43,20 +53,24 @@ def task_ls(
     limit: int = typer.Option(50, "--limit", "-n"),
 ) -> None:
     """Lista tareas pendientes."""
+    from lumen.domain.task import Priority
     from lumen.storage.db import get_session
     from lumen.storage.repositories import TaskRepository
-    from lumen.domain.task import Priority
 
     app_ctx = _get_ctx(ctx)
     repo = TaskRepository()
 
     pcolor = {Priority.NORMAL: "white", Priority.HIGH: "yellow", Priority.URGENT: "red"}
-    plabel = {Priority.NORMAL: "normal", Priority.HIGH: "high", Priority.URGENT: "urgent"}
+    plabel = {
+        Priority.NORMAL: "normal",
+        Priority.HIGH: "high",
+        Priority.URGENT: "urgent",
+    }
 
     with get_session(app_ctx.engine) as session:
-        tasks = repo.list(session, done=False, limit=limit)
+        tasks = repo.list_by_status(session, done=False, limit=limit)
         if all:
-            tasks += repo.list(session, done=True, limit=limit)
+            tasks += repo.list_by_status(session, done=True, limit=limit)
 
     if not tasks:
         console.print("[dim]Sin tareas pendientes.[/dim]")
